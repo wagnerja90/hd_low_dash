@@ -444,4 +444,3 @@ with tab_explorer:
  
 
 
-Downloaded HD_LOW_Quarterly_Data.xlsx Show in Finder
