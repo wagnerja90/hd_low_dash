@@ -118,5 +118,3 @@ def load_lira_correlation() -> pd.DataFrame:
         "Company", "Contemporaneous r", "Leads 1Q r", "Leads 2Q r", "Leads 3Q r", "N (Contemp.)",
     ])
  
-
-
