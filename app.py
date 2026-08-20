@@ -168,9 +168,7 @@ with tab_overview:
         "(BLS), Consumer Sentiment (University of Michigan), and Building Permits (Census/HUD); the "
         "industry-level comparison uses Census retail sales for the Building Materials & Garden category "
         "(NAICS 444); and the Harvard Joint Center for Housing Studies' Leading Indicator of Remodeling "
-        "Activity (LIRA) provides an independent, already forward-looking view of the remodeling market. No "
-        "data from Joe's current employer is used anywhere in this analysis, per case-study compliance "
-        "guidelines."
+        "Activity (LIRA) provides an independent, already forward-looking view of the remodeling market."
     )
     st.write(
         "The main alignment challenge is that HD and LOW report on retail fiscal calendars, not calendar "
