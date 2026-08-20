@@ -56,7 +56,7 @@ def load_overview() -> pd.DataFrame:
         rows.append([ws.cell(row=r, column=c).value for c in range(1, 7)])
     return pd.DataFrame(rows, columns=[
         "Company", "Fiscal Quarter", "Predictor Used", "Predictor Value",
-        "Point Estimate", "LIRA Cross-Check",
+        "Point Estimate", "LIRA Projection (15% Blend)",
     ])
  
  
@@ -118,3 +118,5 @@ def load_lira_correlation() -> pd.DataFrame:
         "Company", "Contemporaneous r", "Leads 1Q r", "Leads 2Q r", "Leads 3Q r", "N (Contemp.)",
     ])
  
+
+
