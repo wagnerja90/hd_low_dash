@@ -113,8 +113,9 @@ tab_trend, tab_industry, tab_macro, tab_explorer, tab_overview = st.tabs(
 with tab_overview:
     st.subheader("Point Estimates — Q3 FY2026 through Q2 FY2027")
     st.caption(
-        "Single-variable regression per quarter: mortgage rate near-term, consumer sentiment far-term "
-        "(trained on FY2022-present to exclude the pandemic-distorted 2019-2021 period). "
+        "Point Estimate = 85% x (trailing 2-quarter baseline + single-variable macro regression "
+        "adjustment: mortgage rate near-term, consumer sentiment far-term, trained on FY2022-present to "
+        "exclude the pandemic-distorted 2019-2021 period) + 15% x LIRA's own forward-looking projection. "
         "See the two sections below for the full data and estimate methodology."
     )
  
@@ -138,8 +139,11 @@ with tab_overview:
     with col_b:
         st.markdown("**Key finding**")
         st.write(
-            "All 8 estimates come out modestly negative — softer than both companies' FY2026 guidance "
-            "(flat to +2.0% HD, flat LOW) and LIRA's projected direction (+0.5% to +2.1%, decelerating)."
+            "A coherent, moderate deceleration story: modestly positive comp sales in the near term "
+            "(Q3/Q4 FY2026) fading toward roughly flat to modestly negative by mid-2027 (Q1/Q2 FY2027) — "
+            "broadly in line with both companies' FY2026 guidance (flat to +2.0% HD, flat LOW) and LIRA's "
+            "own projected deceleration, rather than sharply diverging from them. LOW's estimates run "
+            "consistently softer than HD's at every horizon."
         )
         st.markdown("**Guidance cross-check**")
         st.write("HD: flat to +2.0% total comp (reaffirmed 8/18/26).")
@@ -148,7 +152,7 @@ with tab_overview:
     with st.expander("Full point estimate detail"):
         show = overview.copy()
         show["Point Estimate"] = (show["Point Estimate"] * 100).round(2).astype(str) + "%"
-        show["LIRA Cross-Check"] = (show["LIRA Cross-Check"] * 100).round(1).astype(str) + "%"
+        show["LIRA Projection (15% Blend)"] = (show["LIRA Projection (15% Blend)"] * 100).round(1).astype(str) + "%"
         st.dataframe(show, width='stretch', hide_index=True)
  
     st.divider()
