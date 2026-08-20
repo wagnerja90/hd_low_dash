@@ -115,7 +115,7 @@ with tab_overview:
     st.caption(
         "Single-variable regression per quarter: mortgage rate near-term, consumer sentiment far-term "
         "(trained on FY2022-present to exclude the pandemic-distorted 2019-2021 period). "
-        "Full methodology detail coming soon to this tab."
+        "See the two sections below for the full data and estimate methodology."
     )
  
     card_cols = st.columns(4)
@@ -150,6 +150,105 @@ with tab_overview:
         show["Point Estimate"] = (show["Point Estimate"] * 100).round(2).astype(str) + "%"
         show["LIRA Cross-Check"] = (show["LIRA Cross-Check"] * 100).round(1).astype(str) + "%"
         st.dataframe(show, width='stretch', hide_index=True)
+ 
+    st.divider()
+ 
+    # -----------------------------------------------------------------
+    # Methodology, part 1: data collection & fiscal-calendar alignment
+    # -----------------------------------------------------------------
+    st.subheader("1. Data Collection & Alignment to HD/LOW Fiscal Calendars")
+    st.write(
+        "Every series in this dashboard comes from a public source: HD's and LOW's own comp-sales figures "
+        "are pulled from their quarterly earnings releases; the macro backdrop comes from the 30-Year Fixed "
+        "Mortgage Rate (Freddie Mac PMMS), Existing Home Sales (NAR), New Home Sales (Census Bureau), CPI-U "
+        "(BLS), Consumer Sentiment (University of Michigan), and Building Permits (Census/HUD); the "
+        "industry-level comparison uses Census retail sales for the Building Materials & Garden category "
+        "(NAICS 444); and the Harvard Joint Center for Housing Studies' Leading Indicator of Remodeling "
+        "Activity (LIRA) provides an independent, already forward-looking view of the remodeling market. No "
+        "data from Joe's current employer is used anywhere in this analysis, per case-study compliance "
+        "guidelines."
+    )
+    st.write(
+        "The main alignment challenge is that HD and LOW report on retail fiscal calendars, not calendar "
+        "quarters — their fiscal year starts around February 1, so a given \"quarter\" doesn't line up with "
+        "Jan-Mar/Apr-Jun/etc., and the two companies' own quarter boundaries aren't identical to each other "
+        "either. Most of the public macro data, by contrast, is published monthly (or weekly, for mortgage "
+        "rates). To make the two comparable, every raw monthly/weekly reading was mapped day-by-day across "
+        "the calendar days it covers, and then re-aggregated between each company's own fiscal quarter start "
+        "and end dates — an average for rate/level series (mortgage rate, home sales, sentiment, CPI growth), "
+        "and a sum for dollar-volume series (retail sales, permits). That means HD and LOW can end up with "
+        "slightly different quarterly macro values for what looks like \"the same quarter,\" because their "
+        "fiscal calendars don't perfectly overlap — that's expected and intentional, not an error."
+    )
+    st.write(
+        "A related wrinkle: both companies occasionally report a 53-week fiscal year, which adds a 14th week "
+        "to one quarter. Each company discloses its own convention for handling the resulting comparison, and "
+        "those 4 affected quarters (HD Q4 FY2024/FY2025, LOW Q4 FY2022/FY2023) were adjusted to match each "
+        "company's own reported methodology, rather than left as a naive 14-vs-13-week mismatch that would "
+        "otherwise distort that one quarter's year-over-year growth rate."
+    )
+    with st.expander("More detail: data quality flags"):
+        st.write(
+            "Coverage isn't perfectly uniform across all six macro series and all 30 historical quarters — a "
+            "few series (e.g., pre-2020 existing home sales, some mortgage-rate months) rely on secondary "
+            "public sources or partial-month averages where a primary series had gaps. Any quarter built from "
+            "an incomplete or blended source is flagged in the Macro Data Notes column on the Data Explorer "
+            "tab, so it's visible rather than silently smoothed over."
+        )
+ 
+    # -----------------------------------------------------------------
+    # Methodology, part 2: point-estimate methodology
+    # -----------------------------------------------------------------
+    st.subheader("2. Point Estimate Methodology")
+    st.write(
+        "Each quarterly point estimate is built from three ingredients: a recent-performance baseline, a "
+        "macro-driven adjustment to that baseline, and a small blend with an independent industry projection."
+    )
+    st.markdown("**Baseline: recent actual performance, not a regression line**")
+    st.write(
+        "Rather than let a regression trained on years of history do all the work, each estimate starts from "
+        "the company's own trailing 2-quarter average of actual US comp sales. This anchors the forecast to "
+        "real, recent momentum — a plain macro regression, tested on its own, produced implausibly sharp "
+        "swings that didn't match either company's demonstrated stability."
+    )
+    st.markdown("**Macro extrapolation, and how the predictor was chosen per quarter**")
+    st.write(
+        "For each of the four forecast quarters, comp sales were regressed against one macro series at a "
+        "time, at several lead lengths (same quarter, 1 quarter ahead, 2 quarters ahead, and so on), using "
+        "only Q1 FY2022-present to exclude the pandemic-distorted 2019-2021 period. The Macro Trends tab's "
+        "correlation heatmap shows which predictor is strongest at which horizon — that comparison is what "
+        "determines which series feeds each quarter's estimate, not a fixed choice. It shows the 30-Year "
+        "Mortgage Rate is the more reliable predictor 1-2 quarters out, so it drives the two near-term "
+        "estimates (Q3/Q4 FY2026); Consumer Sentiment holds up better 4-5 quarters out, so it drives the two "
+        "farther-out estimates (Q1/Q2 FY2027). The adjustment added to the baseline is the regression's slope "
+        "multiplied by how far that predictor is projected to move from its own recent normal (a trailing "
+        "average), not from a single volatile reading — mortgage rate is projected as a blend of the latest "
+        "reading and its trailing average, while sentiment is extrapolated from its recent drift, tapered "
+        "down each quarter rather than assumed to run in a straight line for over a year."
+    )
+    st.markdown("**Industry-specific data: a cross-check, plus one direct input**")
+    st.write(
+        "Retail sales for the Building Materials & Garden category (NAICS 444) has the single strongest "
+        "correlation with comp sales of any series tested — but it's reported on the same lag as HD's and "
+        "LOW's own results, so it can't be used to forecast forward without first forecasting NAICS444 "
+        "itself. It's used instead as a same-quarter cross-check on the Industry Trends tab. LIRA, by "
+        "contrast, is the one series in this project that already publishes genuine forward-looking "
+        "projections for our exact forecast quarters — so even though its historical correlation with comp "
+        "sales is comparatively weak, its projection is blended directly into each final point estimate at a "
+        "small, transparently-disclosed 15% weight (85% from the baseline + macro regression, 15% from "
+        "LIRA), reflecting real forward-looking value without letting a weaker relationship dominate the "
+        "number."
+    )
+    with st.expander("More detail: guardrails on the extrapolation"):
+        st.write(
+            "Two additional guardrails were applied. First, the sentiment-based projection for far-out "
+            "quarters tapers its assumed drift by 20% each quarter, rather than extending the current trend "
+            "in a straight line for five quarters. Second, the single farthest-out quarter's regression slope "
+            "(a 5-quarter-lead fit, built on relatively few historical data points) is capped relative to the "
+            "more stable 4-quarter-lead slope, to prevent small-sample noise in one thin regression from "
+            "swinging that quarter's estimate implausibly. Full row-by-row detail for every regression is on "
+            "the 'Point Estimates' tab of the underlying workbook."
+        )
  
 # =====================================================================
 # TAB 2: Comp Sales Trend
