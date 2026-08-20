@@ -50,11 +50,14 @@ def base_layout(**kwargs):
  
  
 def dated_xaxis(default_years_back=3, df=None):
+    """`default_years_back` is unused -- kept for call-site compatibility. Every chart's range slider
+    now opens showing the FULL time series by default (i.e. as if 'All' were already selected);
+    users can still narrow the view with the 1Y/3Y/5Y preset buttons or by dragging the slider."""
     ax = dict(type="date", rangeslider=dict(visible=True, thickness=0.06), rangeselector=RANGE_BUTTONS)
     if df is not None and len(df):
+        start = df["Quarter Start"].min()
         end = df["Quarter Start"].max()
-        start = end - pd.DateOffset(years=default_years_back)
-        ax["range"] = [start, end + pd.DateOffset(months=1)]
+        ax["range"] = [start - pd.DateOffset(months=1), end + pd.DateOffset(months=1)]
     return ax
  
  
@@ -100,8 +103,8 @@ lira_corr = load_lira_correlation()
 st.title("HD & LOW — US Comp Sales Forecast")
 st.caption("US Comp Sales point estimates for 3Q FY2026 - 2Q FY2027 for HD and LOW.")
  
-tab_overview, tab_trend, tab_industry, tab_macro, tab_explorer = st.tabs(
-    ["Overview & Methodology", "Comp Sales Trends", "Industry Trends", "Macro Trends", "Data Explorer"]
+tab_trend, tab_industry, tab_macro, tab_explorer, tab_overview = st.tabs(
+    ["Comp Sales Trends", "Industry Trends", "Macro Trends", "Data Explorer", "Methodology Notes"]
 )
  
 # =====================================================================
@@ -227,11 +230,13 @@ with tab_industry:
                 st.markdown("<div class='hd-low-divider-marker'></div>", unsafe_allow_html=True)
             st.markdown(f"### {company}")
  
+            st.markdown("**Correlation between US Comp Sales & NAICS444 Retail Sales**")
             nc = naics_corr[naics_corr["Company"] == company].set_index("Sample")[NAICS_CORR_COLS]
             fig_nc = go.Figure(go.Heatmap(
                 z=nc.values, x=NAICS_CORR_LABELS, y=nc.index, colorscale=HEAT_SCALE, zmid=0, zmin=-1, zmax=1,
                 colorbar=dict(title="r", thickness=12),
                 text=[[f"{v:.2f}" for v in row] for row in nc.values], texttemplate="%{text}",
+                textfont=dict(color="#000000"),
                 hovertemplate="%{y} · %{x}: r=%{z:.3f}<extra></extra>",
             ))
             fig_nc.update_layout(**base_layout(height=220, margin=dict(t=10, r=10, l=170, b=40)))
@@ -277,9 +282,15 @@ with tab_industry:
             fig2.add_trace(go.Scatter(x=bridge_l["Quarter Start"], y=bridge_vals * 100, name="Comp Sales % (projected)",
                                        mode="lines", line=dict(color=BLUE if company == "HD" else ORANGE, width=2, dash="dash"),
                                        customdata=bridge_l["Fiscal Quarter"], hovertemplate="%{customdata}: %{y:.1f}%<extra>Comp (projected)</extra>"))
-            fig2.add_trace(go.Scatter(x=l["Quarter Start"], y=l["LIRA Rate of Change"] * 100, name="LIRA Y/Y Growth %",
+            actual_lira = l[l["Period Type"] == "Historical"]
+            proj_lira = l[l["Period Type"] == "Projected"]
+            bridge_lira = pd.concat([actual_lira.tail(1), proj_lira])
+            fig2.add_trace(go.Scatter(x=actual_lira["Quarter Start"], y=actual_lira["LIRA Rate of Change"] * 100, name="LIRA Y/Y Growth % (reported)",
                                        mode="lines", line=dict(color=YELLOW, width=2), yaxis="y2",
-                                       customdata=l["Fiscal Quarter"], hovertemplate="%{customdata}: %{y:.1f}%<extra>LIRA</extra>"))
+                                       customdata=actual_lira["Fiscal Quarter"], hovertemplate="%{customdata}: %{y:.1f}%<extra>LIRA (reported)</extra>"))
+            fig2.add_trace(go.Scatter(x=bridge_lira["Quarter Start"], y=bridge_lira["LIRA Rate of Change"] * 100, name="LIRA Y/Y Growth % (projected)",
+                                       mode="lines", line=dict(color=YELLOW, width=2, dash="dash"), yaxis="y2",
+                                       customdata=bridge_lira["Fiscal Quarter"], hovertemplate="%{customdata}: %{y:.1f}%<extra>LIRA (projected)</extra>"))
             _start, _end = window_bounds(l, 4)
             comp_all = pd.concat([actual_l[[ "Quarter Start", comp_col]], pd.DataFrame({"Quarter Start": bridge_l["Quarter Start"], comp_col: bridge_vals})])
             fig2.update_layout(**base_layout(
@@ -325,12 +336,14 @@ with tab_macro:
             if company == "LOW":
                 st.markdown("<div class='hd-low-divider-marker'></div>", unsafe_allow_html=True)
             st.markdown(f"### {company}")
+            st.markdown("**Correlation between US Comp Sales & Macro Analyses**")
             mc = macro_corr[macro_corr["Company"] == company].set_index("Macro Series")[LEAD_COLS]
             mc = mc.rename(index=MACRO_SERIES_LABELS)
             fig = go.Figure(go.Heatmap(
                 z=mc.values, x=LEAD_COLS, y=mc.index, colorscale=HEAT_SCALE, zmid=0, zmin=-1, zmax=1,
                 colorbar=dict(title="r", thickness=12),
                 text=[[f"{v:.2f}" for v in row] for row in mc.values], texttemplate="%{text}",
+                textfont=dict(color="#000000"),
                 hovertemplate="%{y} · %{x}: r=%{z:.3f}<extra></extra>",
             ))
             fig.update_layout(**base_layout(height=280, margin=dict(t=10, r=10, l=140, b=40)))
