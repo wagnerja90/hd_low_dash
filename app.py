@@ -394,18 +394,18 @@ with tab_macro:
             ))
             st.plotly_chart(fig2, width='stretch', key=f"homesales_{company}")
  
-            st.markdown("**CPI-U vs. Consumer Sentiment**")
+            st.markdown("**CPI-U Y/Y Growth vs. Consumer Sentiment**")
             fig3 = go.Figure()
-            fig3.add_trace(go.Scatter(x=d_actual["Quarter Start"], y=d_actual["CPI-U Index (NSA)"], name="CPI-U Index",
+            fig3.add_trace(go.Scatter(x=d_actual["Quarter Start"], y=d_actual["CPI-U Y/Y Growth (%)"] * 100, name="CPI-U Y/Y Growth",
                                        mode="lines", line=dict(color=BLUE if company == "HD" else ORANGE, width=2),
-                                       customdata=d_actual["Fiscal Quarter"], hovertemplate="%{customdata}: %{y:.1f}<extra>CPI-U</extra>"))
+                                       customdata=d_actual["Fiscal Quarter"], hovertemplate="%{customdata}: %{y:.1f}%<extra>CPI-U Y/Y</extra>"))
             fig3.add_trace(go.Scatter(x=d_actual["Quarter Start"], y=d_actual["Consumer Sentiment"], name="Consumer Sentiment",
                                        mode="lines", line=dict(color=YELLOW, width=2), yaxis="y2",
                                        customdata=d_actual["Fiscal Quarter"], hovertemplate="%{customdata}: %{y:.1f}<extra>Sentiment</extra>"))
             _start, _end = window_bounds(d_actual, 3)
             fig3.update_layout(**base_layout(
-                height=340, yaxis=dict(title="CPI-U Index", gridcolor=GRID,
-                                        range=windowed_range(d_actual, "CPI-U Index (NSA)", _start, _end, scale=1)),
+                height=340, yaxis=dict(title="CPI-U Y/Y Growth %", ticksuffix="%", gridcolor=GRID,
+                                        range=windowed_range(d_actual, "CPI-U Y/Y Growth (%)", _start, _end, scale=100)),
                 yaxis2=dict(title="Consumer Sentiment", overlaying="y", side="right", showgrid=False,
                             range=windowed_range(d_actual, "Consumer Sentiment", _start, _end, scale=1)),
                 xaxis=dated_xaxis(default_years_back=3, df=d_actual),
@@ -444,3 +444,4 @@ with tab_explorer:
  
 
 
+Downloaded HD_LOW_Quarterly_Data.xlsx Show in Finder
